@@ -123,7 +123,7 @@ Please refer to files within `deployment-chart/templates/` for implementation de
 
 - `deployment-chart/deployment.yaml` provides additional environment variables to the runtime pod which are available from Kubernetes, such as pod name, pod IP address etc.
 
-- Sane `deployment` defaults are used, such as a `rollingUpdate` strategy with `maxSurge: 1` and `maxUnavailable: 0` to ensure graceful rolling out of applications.
+- Sane `deployment` defaults are used, such as a `rollingUpdate` strategy with `maxSurge: 1` and `maxUnavailable: 0` to ensure graceful rolling out of applications. Furthermote, `replicas` are required even if horizontal pod autoscaling is configured, otherwise a random default value may be provisioned, e.g. 2 replicas by default on GKE.
 
 - A lifecycle `preStop` hook with sleep of 5 seconds is added by default which allows for more graceful exit of pods.
 
