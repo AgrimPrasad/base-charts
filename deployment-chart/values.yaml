@@ -9,6 +9,7 @@ replicaCount: 1
 
 autoscaling:
   enabled: false
+  targetKind: Deployment # Deployment or StatefulSet
   minReplicas: 1
   maxReplicas: 3
   targetCPUAverageValue: 100m

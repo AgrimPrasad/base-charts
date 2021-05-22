@@ -109,7 +109,7 @@ Please refer to files within `deployment-chart/templates/` for implementation de
 
 - [Container liveness/readiness/startup probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#:~:text=The%20kubelet%20uses%20startup%20probes,interfere%20with%20the%20application%20startup.) which are very important in ensuring that applicaton pods can start up properly and be recycled if their health checks start failing.
 
-  You can enable these with default values in your `values-<env>.yaml` file as follows:
+  You can enable these with default values in your `values-<env>.yaml` file as follows. This assumes a health check endpoint in your app at path `/health` and port 80. You can override these default values as usual if needed.
 
   ```yaml
   probes:
