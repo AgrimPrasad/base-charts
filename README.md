@@ -8,7 +8,7 @@ Goals:
 
 1. Keep it simple. Deployment using raw github links, not fancy helm repo servers.
 
-## Using base helm chart
+## Using a base helm chart
 
 You can use one of the existing base helm charts defined here (currently the `deployment-chart` base helm chart) to deploy to its intended deployment target (e.g. GKE Kubernetes for the `deployment-chart` base helm chart).
 
@@ -36,11 +36,100 @@ You can use one of the existing base helm charts defined here (currently the `de
        --location $(CLUSTER_REGION)
    ```
 
-## Adding/Updating base helm chart
+## `deployment-chart` base helm chart customizations
+
+The `deployment-chart` base helm chart provided in this repo has the following additional modifications on top of the standard helm chart generated with `helm create`.
+
+Please refer to files within `deployment-chart/templates/` for implementation details.
+
+- Pod `anti-affinity` can be easily configured using the following `values.yaml` file entries.
+
+  - `soft` antiAffinity provides this feature at pod schedule time only (best-effort)
+
+  ```yaml
+  antiAffinity: "soft"
+  ```
+
+  - `hard` antiAffinity ensures that pods end up on different nodes
+
+  ```yaml
+  antiAffinity: "hard"
+  ```
+
+- Node affinity can be configured for pods. This can be used to ensure that pods end up or don't end up on specific nodes. For example, for pods which require nodes with GPU available on GKE:
+
+  ```yaml
+  nodeAffinity:
+  requiredDuringSchedulingIgnoredDuringExecution:
+     nodeSelectorTerms:
+        - matchExpressions:
+           - key: cloud.google.com/gke-accelerator
+              operator: Exists
+  ```
+
+- Default Horizontal Pod Autoscaler (HPA) `autoscaling` values have been modified to use explicit resource values as opposed to target CPU/memory percentages. This is because these percentage values are unintuitively based on the resource limits as opposed to resource request values. Example
+
+  ```yaml
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUAverageValue: 100m # autoscale at 100m CPU explicitly
+    targetMemoryAverageValue: 200Mi # autoscale at 200Mi Memory explicitly
+  ```
+
+- The base `values` file at `deployment-chart/values.yaml` explicitly specifies low requests and high limits values by default. This is as per usual Ops guidance to always test with low resource request values initially until your app can comfortably start up and run at some sane resource values. Without these default values, your app could start up and use up infinite resources due to bugs.
+
+  Default values in `deployment-chart/values.yaml`:
+
+  ```yaml
+  resources:
+    limits:
+      cpu: 200m # arbitrarily high, adjust as per usage
+      memory: 400Mi # arbitrarily high, adjust as per usage
+    requests:
+      cpu: 5m # arbitrarily low, adjust as per usage
+      memory: 20Mi # arbitrarily low, adjust as per usage
+  ```
+
+- Ability to add multiple kubernetes service ports and annotations if desired. The optional service annotations can be useful in several environments, e.g. in orderto configure [GKE container-native load balancing](https://cloud.google.com/kubernetes-engine/docs/how-to/container-native-load-balancing) for better GKE ingress performance.
+
+  ```yaml
+  service:
+   type: ClusterIP
+   ports:
+      - name: http
+         port: 80
+         targetPort: http
+         protocol: TCP
+   annotations:
+      # following indicates that we use container-native load-balancing
+      cloud.google.com/neg: '{"ingress": true}'
+  ```
+
+- [Container liveness/readiness/startup probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#:~:text=The%20kubelet%20uses%20startup%20probes,interfere%20with%20the%20application%20startup.) which are very important in ensuring that applicaton pods can start up properly and be recycled if their health checks start failing.
+
+  You can enable these with default values in your `values-<env>.yaml` file as follows:
+
+  ```yaml
+  probes:
+    liveness:
+      enabled: true
+    readiness:
+      enabled: true
+    startup:
+      enabled: true
+  ```
+
+- `deployment-chart/deployment.yaml` provides additional environment variables to the runtime pod which are available from Kubernetes, such as pod name, pod IP address etc. In addition, sane defaults are used, such as a `rollingUpdate` strategy with `maxSurge: 1` and `maxUnavailable: 0` to ensure graceful rolling out of applications.
+
+- `deployment-chart/secret.yaml`: Allows you to add kubernetes secrets to the application pods as runtime environment variables.
+
+## Adding/Updating base helm charts
 
 Adding a new base helm chart should only need to be performed once (or at most a few times) per deployment target (e.g. GKE Kubernetes).
 
-### Adding base helm chart
+### Adding a new base helm chart
 
 Create a new helm chart called `deployment-chart` and update the repository.
 

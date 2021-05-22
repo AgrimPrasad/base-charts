@@ -2,7 +2,17 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+nameOverride: ""
+fullnameOverride: ""
+
 replicaCount: 1
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUAverageValue: 100m
+  targetMemoryAverageValue: 200Mi
 
 image:
   repository: nginx
@@ -11,8 +21,6 @@ image:
   tag: ""
 
 imagePullSecrets: []
-nameOverride: ""
-fullnameOverride: ""
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -38,7 +46,15 @@ securityContext: {}
 
 service:
   type: ClusterIP
-  port: 80
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+  # following optional annotation indicates that we use GKE container-native load-balancing when exposing this service using a GKE ingress
+  # annotations:
+    # cloud.google.com/neg: '{"ingress": true}'
+
 
 ingress:
   enabled: false
@@ -57,27 +73,62 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
-
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
+resources:
+  limits:
+    cpu: 200m # arbitrarily high, adjust as per usage
+    memory: 400Mi # arbitrarily high, adjust as per usage
+  requests:
+    cpu: 5m  # arbitrarily low, adjust as per usage
+    memory: 20Mi  # arbitrarily low, adjust as per usage
 
 nodeSelector: {}
 
 tolerations: []
 
-affinity: {}
+# ensures that pods from the same deployment don't end up on the same node
+# `soft` antiAffinity provides this feature at pod schedule time only (best-effort)
+# `hard` antiAffinity ensures that pods end up on different nodes
+antiAffinity: "soft" # override to "hard" for critical apps
+
+# use node affinity to ensure that pods end up or don't end up on specific nodes
+# for example, for pods which require nodes with GPU available
+nodeAffinity: {}
+# Example nodeAffinity:
+# nodeAffinity:
+#   requiredDuringSchedulingIgnoredDuringExecution:
+#     nodeSelectorTerms:
+#     - matchExpressions:
+#       - key: cloud.google.com/gke-accelerator
+#         operator: Exists
+
+probes:
+  liveness:
+    enabled: false
+    path: /health
+    port: http
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+  readiness:
+    enabled: false
+    path: /health
+    port: http
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+  startup:
+    enabled: false
+    path: /health
+    port: http
+    initialDelaySeconds: 1
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 6 # failureThreshold * periodSeconds = 60 seconds startup delay allowed by default
+
+# sane pod rollout strategy, can usually leave this untouched
+podRollout:
+  minReadySeconds: 10
+  maxSurge: 1
+  maxUnavailable: 0
