@@ -23,6 +23,13 @@ image:
 
 imagePullSecrets: []
 
+# optional sidecar containers which provide additional functionality to the main container
+sidecarContainers: {}
+# Example:
+# sidecarContainers:
+# - name: cloudsql-proxy
+#   image: gcr.io/cloudsql-docker/gce-proxy:1.22.0-alpine
+
 serviceAccount:
   # Specifies whether a service account should be created
   create: true

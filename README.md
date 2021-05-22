@@ -127,6 +127,8 @@ Please refer to files within `deployment-chart/templates/` for implementation de
 
 - A lifecycle `preStop` hook with sleep of 5 seconds is added by default which allows for more graceful exit of pods.
 
+- Support for `sidecarContainers` with the deployment which allows you to deploy additional containers other than the main container for a given pod.
+
 - `deployment-chart/secret.yaml`: Allows you to add kubernetes secrets to the application pods as runtime environment variables.
 
 ## Adding/Updating base helm charts
