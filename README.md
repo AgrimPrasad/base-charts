@@ -121,7 +121,11 @@ Please refer to files within `deployment-chart/templates/` for implementation de
       enabled: true
   ```
 
-- `deployment-chart/deployment.yaml` provides additional environment variables to the runtime pod which are available from Kubernetes, such as pod name, pod IP address etc. In addition, sane defaults are used, such as a `rollingUpdate` strategy with `maxSurge: 1` and `maxUnavailable: 0` to ensure graceful rolling out of applications.
+- `deployment-chart/deployment.yaml` provides additional environment variables to the runtime pod which are available from Kubernetes, such as pod name, pod IP address etc.
+
+- Sane `deployment` defaults are used, such as a `rollingUpdate` strategy with `maxSurge: 1` and `maxUnavailable: 0` to ensure graceful rolling out of applications.
+
+- A lifecycle `preStop` hook with sleep of 5 seconds is added by default which allows for more graceful exit of pods.
 
 - `deployment-chart/secret.yaml`: Allows you to add kubernetes secrets to the application pods as runtime environment variables.
 

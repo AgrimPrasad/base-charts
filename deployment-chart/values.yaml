@@ -133,3 +133,11 @@ podRollout:
   minReadySeconds: 10
   maxSurge: 1
   maxUnavailable: 0
+
+# lifecycle for graceful exit of pods
+lifecycle:
+  preStop:
+    exec:
+      command:
+        - "sleep"
+        - "5"
