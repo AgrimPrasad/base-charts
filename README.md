@@ -52,5 +52,9 @@ After a base helm chart has been created, you can use it to deploy to its deploy
        --set secrets.SUPER_SECRET_KEY=$(SUPER_SECRET_KEY) \
        --values=./values-<env>.yaml \
        --repo=https://raw.githubusercontent.com/AgrimPrasad/base-charts/master/ deployment-chart \
-       | gke-deploy run --filename - --app $(APP_NAME) --cluster $(CLUSTER_NAME) --project $(CLUSTER_PROJECT) --location $(CLUSTER_REGION)
+       | gke-deploy run --filename - \
+       --app $(APP_NAME) \
+       --cluster $(CLUSTER_NAME) \
+       --project $(CLUSTER_PROJECT) \
+       --location $(CLUSTER_REGION)
    ```
