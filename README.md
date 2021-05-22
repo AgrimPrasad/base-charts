@@ -8,6 +8,34 @@ Goals:
 
 1. Keep it simple. Deployment using raw github links, not fancy helm repo servers.
 
+## Using base helm chart
+
+You can use one of the existing base helm charts defined here (currently the `deployment-chart` base helm chart) to deploy to its intended deployment target (e.g. GKE Kubernetes for the `deployment-chart` base helm chart).
+
+1. Add the helm repo to your local list of help repos.
+
+   ```sh
+   helm repo add base-charts 'https://raw.githubusercontent.com/AgrimPrasad/base-charts/master/'
+   helm repo update
+   ```
+
+2. Prepare a helm `values` file specific to the environment you are deploying to. A sample [`deployment-chart/values.yaml`](./deployment-chart/values.yaml) file is provided here which acts as the base `values.yaml` file for your deployment. You should specify any overrides to this `values.yaml` file in your own repo with a separate `values-<env>.yaml` file.
+
+3. Deploy using `helm install` or `helm template` commands while providing your own `values-<env>.yaml` file as mentioned above to override helm chart values. For example, to deploy to GKE, pipe the YAML output of `helm template` to the [`gke-deploy`](https://cloud.google.com/build/docs/deploying-builds/deploy-gke) tool provided by GCP. Note that `gke-deploy` is a GKE-specific convenience wrapper around `kubectl`, so you can use similar commands to deploy with `kubectl` directly into any Kubernetes server environment.
+
+   ```sh
+       helm template --name-template=$(APP_NAME) \
+       --set image.tag=latest \
+       --set secrets.SUPER_SECRET_KEY=$(SUPER_SECRET_KEY) \
+       --values=./values-<env>.yaml \
+       --repo=https://raw.githubusercontent.com/AgrimPrasad/base-charts/master/ deployment-chart \
+       | gke-deploy run --filename - \
+       --app $(APP_NAME) \
+       --cluster $(CLUSTER_NAME) \
+       --project $(CLUSTER_PROJECT) \
+       --location $(CLUSTER_REGION)
+   ```
+
 ## Adding/Updating base helm chart
 
 Adding a new base helm chart should only need to be performed once (or at most a few times) per deployment target (e.g. GKE Kubernetes).
@@ -30,31 +58,3 @@ Update the `version` of the existing base helm chart in `deployment-chart/Chart.
 ```sh
 NAME=deployment-chart make bump # AFTER the base helm chart version has been updated
 ```
-
-## Using base helm chart
-
-After a base helm chart has been created, you can use it to deploy to its deployment target (e.g. GKE Kubernetes).
-
-1. Add the helm repo to your local list of help repos.
-
-   ```sh
-   helm repo add base-charts 'https://raw.githubusercontent.com/AgrimPrasad/base-charts/master/'
-   helm repo update
-   ```
-
-2. Prepare a helm `values` file specific to the environment you are deploying too. A sample [`deployment-chart/values.yaml`](./deployment-chart/values.yaml) file is provided here which acts as the base `values.yaml` file for your deployment. You should specify any overrides to this `values.yaml` file in your own repo with a separate `values-<env>.yaml` file.
-
-3. Deploy using `helm install` or `helm template` commands while providing your own `values-<env>.yaml` file as mentioned above to override helm chart values. For example, to deploy to GKE, pipe the YAML output of `helm template` to the [`gke-deploy`](https://cloud.google.com/build/docs/deploying-builds/deploy-gke) tool provided by GCP. Note that `gke-deploy` is a GKE-specific convenience wrapper around `kubectl`, so you can use a similar command to deploy with `kubectl` directly into any Kubernetes server environment.
-
-   ```sh
-       helm template --name-template=$(APP_NAME) \
-       --set image.tag=latest \
-       --set secrets.SUPER_SECRET_KEY=$(SUPER_SECRET_KEY) \
-       --values=./values-<env>.yaml \
-       --repo=https://raw.githubusercontent.com/AgrimPrasad/base-charts/master/ deployment-chart \
-       | gke-deploy run --filename - \
-       --app $(APP_NAME) \
-       --cluster $(CLUSTER_NAME) \
-       --project $(CLUSTER_PROJECT) \
-       --location $(CLUSTER_REGION)
-   ```
