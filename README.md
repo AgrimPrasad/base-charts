@@ -4,7 +4,7 @@ This repository is intended to be used as a base helm chart repository to deploy
 
 Goals:
 
-1. Define 1 (or at most few) base helm charts per deployment target (e.g. GKE Kubernetes) on which applications should be based on for deployment.
+1. Define 1 (or at most few) base helm charts per deployment target (e.g. GKE Kubernetes or GCP Cloud Run) on which applications should be based on for deployment.
 
 1. Keep it simple. Deployment using raw github links, not fancy helm repo servers.
 

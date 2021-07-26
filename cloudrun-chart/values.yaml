@@ -1,0 +1,27 @@
+# Default values for chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+nameOverride: ""
+fullnameOverride: ""
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 128Mi
+
+containerPort: 80
+
+image: {}
+
+vpcConnector: {}
+vpcAccessEgress: {}
+
+# if your app requires single instance, change to 1
+containerMaxScale: 1000
+
+# max number of requests per instance before scale up (max allowed is 1000 concurrent requests per instance)
+containerConcurrency: 80
+
+# max value allowed: 900 or 15 min
+timeoutSeconds: 300
